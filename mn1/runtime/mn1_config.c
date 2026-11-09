@@ -49,7 +49,7 @@ void Port_Config_SetWidescreenEnabled(bool enabled) { (void)enabled; }
 void Port_Config_ToggleWidescreen(void) {  }
 bool Port_Config_GetConsoleParity(void) {  return false; }
 void Port_Config_SetConsoleParity(bool on) { (void)on; }
-bool Port_Config_GetSkipLauncher(void) {  return false; }
+bool Port_Config_GetSkipLauncher(void) {  return true; }
 void Port_Config_SetSkipLauncher(bool on) { (void)on; }
 void Port_Config_ToggleConsoleParity(void) {  }
 PortAspectMode Port_Config_AspectMode(void) {  return 0; }

@@ -39,6 +39,7 @@ ESPECIAIS = {
     'Port_Config_StampInputEdge': 'if ((unsigned)input < PORT_INPUT_COUNT) mn1_input_edge[input] = 1;',
     'Port_Config_TestForceEdge': 'if ((unsigned)input < PORT_INPUT_COUNT) mn1_input_edge[input] = 1;',
     'Port_Config_InputUiLabel': 'return "";',
+    'Port_Config_GetSkipLauncher': 'return true;',
 }
 
 out = ['/* Gerado por gera_config.py: configuracao fixa da MN1. NAO EDITAR A MAO. */',

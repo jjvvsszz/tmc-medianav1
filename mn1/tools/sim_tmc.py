@@ -184,6 +184,47 @@ class SimTmc(sim.Sim):
         a = self.args()
         return bits_f(d(a[0], a[1]))
 
+    def a_CreateFileW(self):
+        n = self.ws(self.args()[0])
+        self.abertos = getattr(self, 'abertos', {})
+        self.abertos[n] = self.abertos.get(n, 0) + 1
+        if self.abertos[n] in (1, 10, 1000):
+            print('  [sim] CreateFileW %s (%dx)' % (n, self.abertos[n]), flush=True)
+        return super().a_CreateFileW()
+
+    def a_SetFilePointer(self):
+        a = self.args()
+        o = self.handles[a[0]]
+        dist = a[1] - (1 << 32) if a[1] & 0x80000000 else a[1]
+        if o[0] == 'mem':
+            pos, tam, i = o[2], len(o[1]), 2
+        elif o[0] == 'w':
+            pos, tam, i = o[3], len(o[2]), 3
+        else:
+            return 0
+        novo = {0: 0, 1: pos, 2: tam}[a[3]] + dist
+        if novo < 0:
+            return 0xFFFFFFFF
+        o[i] = novo
+        return novo
+
+    def a_DeleteFileW(self):
+        r = self.path(self.ws(self.args()[0]))
+        if r and os.path.exists(r):
+            os.remove(r)
+            return 1
+        self.err = 2
+        return 0
+
+    def a_MoveFileW(self):
+        a = self.args()
+        x, y = self.path(self.ws(a[0])), self.path(self.ws(a[1]))
+        if x and y and os.path.exists(x) and not os.path.exists(y):
+            os.replace(x, y)
+            return 1
+        self.err = 2
+        return 0
+
     # entrada roteirizada ----------------------------------------------------
     def a_PeekMessageW(self):
         a = self.args(5)
@@ -210,6 +251,12 @@ class SimTmc(sim.Sim):
 
 
 SAIDA = os.path.join(AQUI, 'sim_saida')
+
+
+def vigia_simbolos():
+    from elftools.elf.elffile import ELFFile
+    e = ELFFile(open(os.path.join(AQUI, 'mn1', 'gerado', 'tmc.elf'), 'rb'))
+    return [(x['st_value'], x.name) for x in e.get_section_by_name('.symtab').iter_symbols() if x['st_info']['type'] == 'STT_FUNC']
 if __name__ == '__main__':
     import json
     import pefile
@@ -223,6 +270,24 @@ if __name__ == '__main__':
     shutil.copy(ROM, os.path.join(caixa, 'MN1', 'baserom.gba'))
     w = sim.World(caixa)
     s = SimTmc(w, os.path.join(AQUI, 'dist', 'tmc.exe'), '')
+    import threading
+    from unicorn.mips_const import UC_MIPS_REG_PC, UC_MIPS_REG_RA
+    simbolos = sorted(vigia_simbolos())
+
+    def onde(a):
+        import bisect
+        i = bisect.bisect_right(simbolos, (a, '~')) - 1
+        return '%s+%#x' % (simbolos[i][1], a - simbolos[i][0]) if i >= 0 else hex(a)
+
+    def vigia():
+        ant = {}
+        while True:
+            time.sleep(20)
+            pc, ra = s.uc.reg_read(UC_MIPS_REG_PC), s.uc.reg_read(UC_MIPS_REG_RA)
+            novas = {k: v - ant.get(k, 0) for k, v in w.calls.items() if isinstance(v, int) and v != ant.get(k, 0)}
+            ant = dict(w.calls)
+            print('  [vigia] %.0fs reais t=%.1fs pc=%s ra=%s quadros=%d apis=%s' % (time.time() - s.inicio, w.t_us / 1e6, onde(pc), onde(ra), w.frames.get('n', 0), sorted(novas.items(), key=lambda kv: -kv[1])[:6]), flush=True)
+    threading.Thread(target=vigia, daemon=True).start()
     try:
         code = s.run()
     except BaseException as e:
@@ -230,4 +295,4 @@ if __name__ == '__main__':
     print('saida:', code, ' quadros:', w.frames.get('n', 0), ' tempo simulado: %.1fs' % (w.t_us / 1e6))
     log = os.path.join(caixa, 'RESULTADOS3', 'TMC_LOG.txt')
     print(open(log, encoding='utf8', errors='replace').read()[-6000:] if os.path.exists(log) else 'SEM LOG')
-    print('chamadas mais frequentes:', sorted(w.calls.items(), key=lambda kv: -kv[1])[:12])
+    print('chamadas mais frequentes:', sorted(((k, v) for k, v in w.calls.items() if isinstance(v, int)), key=lambda kv: -kv[1])[:12])

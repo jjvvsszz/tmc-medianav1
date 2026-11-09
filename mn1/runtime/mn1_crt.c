@@ -472,8 +472,26 @@ int backtrace(void **b, int n) { (void)b; (void)n; return 0; }
 char **backtrace_symbols(void *const *b, int n) { (void)b; (void)n; return 0; }
 
 /* ---------------------------------------------------------------- processo e ambiente */
-char *getenv(const char *n) { (void)n; return 0; }
-int setenv(const char *n, const char *v, int o) { (void)n; (void)v; (void)o; return 0; }
+/* ambiente: so o que o proprio programa define (o port usa TMC_AUTOPLAY para pular a tela inicial) */
+static char amb_nome[16][40], amb_valor[16][120];
+char *getenv(const char *n)
+{
+    int i;
+    for (i = 0; i < 16; i++) if (amb_nome[i][0] && !strcmp(amb_nome[i], n)) return amb_valor[i];
+    return 0;
+}
+int setenv(const char *n, const char *v, int o)
+{
+    int i, livre = -1;
+    for (i = 0; i < 16; i++) {
+        if (amb_nome[i][0] && !strcmp(amb_nome[i], n)) { if (o) { strncpy(amb_valor[i], v, 119); } return 0; }
+        if (!amb_nome[i][0] && livre < 0) livre = i;
+    }
+    if (livre < 0 || strlen(n) > 39) return -1;
+    strcpy(amb_nome[livre], n);
+    strncpy(amb_valor[livre], v, 119);
+    return 0;
+}
 static void (*saida[32])(void);
 static int nsaida;
 int atexit(void (*fn)(void)) { if (nsaida < 32) saida[nsaida++] = fn; return 0; }

@@ -199,6 +199,10 @@ static void EnsureExtractDir(void) {
 
 /* Extract a single 4 KB page to rom_data/XXXXXXXX.bin */
 static void ExtractPage(u32 page) {
+#ifdef TMC_MN1
+    (void)page;
+    return;
+#endif
     if (page >= ROM_MAX_PAGES || !gRomData)
         return;
     if (IsPageExtracted(page))
