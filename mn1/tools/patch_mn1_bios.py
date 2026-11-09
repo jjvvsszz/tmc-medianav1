@@ -34,3 +34,28 @@ else:
     assert t.count(velho) == 1, 'ExtractPage nao encontrado'
     open(p, 'w', encoding='utf8', newline='\n').write(t.replace(velho, novo))
     print('rom_data: aplicado')
+
+# Font em 32 bits: o detector olha os bytes 4-7 da struct. Em 64 bits e a metade alta do ponteiro
+# dest (nunca um endereco do GBA); em 32 bits e o campo gfx_dest, que costuma guardar 0x06xxxxxx.
+# Uma Font montada em tempo de execucao (CreateDialogBox) era tomada por blob do GBA, o dest nativo
+# virava NULL e ShowTextBox escrevia no endereco 0 (travamento ao criar o save na MN1, 08/11/2026).
+p = sys.argv[1] + '/port/port_rom.h'
+t = open(p, encoding='utf8').read()
+velho = ('    const u8* raw = (const u8*)data;\n'
+         '    u32 word1 = raw[4] | (raw[5] << 8) | (raw[6] << 16) | (raw[7] << 24);\n'
+         '    return (word1 >= 0x02000000u && word1 < 0x08000000u);\n')
+novo = ('    const u8* raw = (const u8*)data;\n'
+        '#if __SIZEOF_POINTER__ == 4\n'
+        '    /* 32 bits: layouts iguais; blob do GBA tem dest no formato do GBA, Font nativa nao */\n'
+        '    u32 word0 = raw[0] | (raw[1] << 8) | (raw[2] << 16) | ((u32)raw[3] << 24);\n'
+        '    return (word0 >= 0x02000000u && word0 < 0x08000000u);\n'
+        '#else\n'
+        '    u32 word1 = raw[4] | (raw[5] << 8) | (raw[6] << 16) | (raw[7] << 24);\n'
+        '    return (word1 >= 0x02000000u && word1 < 0x08000000u);\n'
+        '#endif\n')
+if novo in t:
+    print('font: ja aplicado')
+else:
+    assert t.count(velho) == 1, 'Port_IsFontGBAEncoded nao encontrado'
+    open(p, 'w', encoding='utf8', newline='\n').write(t.replace(velho, novo))
+    print('font: aplicado')

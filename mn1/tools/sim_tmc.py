@@ -24,10 +24,12 @@ from unicorn.mips_const import UC_MIPS_REG_V1  # noqa: E402
 
 QUADROS = int(sys.argv[1]) if len(sys.argv) > 1 else 120
 ROM = sys.argv[2] if len(sys.argv) > 2 else 'baserom.gba'
-SALVAR = {10, 30, 60, 90, 120, 160, 200, 260, 320}
+SALVAR = set(range(20, 1000, 20))
+RASTRO_DESDE = int(os.environ.get('RASTRO', '0')) or 10**9
 
 # roteiro de toques: (segundo simulado, x, y) aperta por 150 ms
-ROTEIRO = [(t, 455, 460) for t in (4, 6, 8, 10, 12)] + [(t, 726, 346) for t in (14, 16, 18, 20)]
+ROTEIRO = [(t, 455, 460) for t in (4, 6, 8, 10, 12)] + [(t, 726, 346) for t in range(14, 90, 2)] + [(t, 455, 460) for t in (31, 41, 51)]
+ROTEIRO.sort()
 
 
 def d(lo, hi):
@@ -244,6 +246,11 @@ class SimTmc(sim.Sim):
             sim.write_png(os.path.join(SAIDA, 'quadro_%03d.png' % n), self.w.frames['last'])
             cores = len(set(struct.unpack('<%dH' % (bw * bh), b)[i] for i in range(0, bw * bh, 97)))
             print('  [sim] quadro %d t=%.1fs cores~%d (%.0fs reais)' % (n, self.w.t_us / 1e6, cores, time.time() - self.inicio))
+        if n == RASTRO_DESDE and not hasattr(self, 'rastro'):
+            import collections
+            from unicorn import UC_HOOK_BLOCK
+            self.rastro = collections.deque(maxlen=60)
+            self.uc.hook_add(UC_HOOK_BLOCK, lambda uc, a, sz, ud: self.rastro.append(a))
         if n >= QUADROS:
             self.exitcode = 0
             self.uc.emu_stop()
@@ -288,10 +295,29 @@ if __name__ == '__main__':
             ant = dict(w.calls)
             print('  [vigia] %.0fs reais t=%.1fs pc=%s ra=%s quadros=%d apis=%s' % (time.time() - s.inicio, w.t_us / 1e6, onde(pc), onde(ra), w.frames.get('n', 0), sorted(novas.items(), key=lambda kv: -kv[1])[:6]), flush=True)
     threading.Thread(target=vigia, daemon=True).start()
+    if os.environ.get('ESPIAR'):
+        from unicorn import UC_HOOK_CODE as _HC
+        from unicorn.mips_const import UC_MIPS_REG_A0, UC_MIPS_REG_A1, UC_MIPS_REG_A2, UC_MIPS_REG_A3
+        for nome_ in os.environ['ESPIAR'].split(','):
+            end_ = next(a_ for a_, n_ in simbolos if n_ == nome_)
+            def _esp(uc, a, sz, ud, nome_=nome_):
+                r_ = [uc.reg_read(x) for x in (UC_MIPS_REG_A0, UC_MIPS_REG_A1, UC_MIPS_REG_A2, UC_MIPS_REG_A3, UC_MIPS_REG_RA)]
+                print('  [espia] %s(a0=%08x a1=%08x a2=%08x a3=%08x) de %s' % (nome_, r_[0], r_[1], r_[2], r_[3], onde(r_[4])), flush=True)
+            s.uc.hook_add(_HC, _esp, begin=end_, end=end_)
     try:
         code = s.run()
     except BaseException as e:
         code = 'excecao: %r' % e
+    from unicorn.mips_const import UC_MIPS_REG_RA as _RA, UC_MIPS_REG_SP as _SP
+    ra_ = s.uc.reg_read(_RA)
+    print('  [sim] no fim: ra=%s' % onde(ra_))
+    sp_ = s.uc.reg_read(_SP)
+    pilha = [struct.unpack('<I', s.rd(sp_ + 4 * i, 4))[0] for i in range(64)]
+    print('  [sim] pilha (enderecos de codigo):', [onde(x) for x in pilha if 0x11000 <= x < 0x400000][:12])
+    if hasattr(s, 'rastro'):
+        print('  [sim] ultimos blocos:')
+        for a_ in s.rastro:
+            print('     %08x %s' % (a_, onde(a_)))
     print('saida:', code, ' quadros:', w.frames.get('n', 0), ' tempo simulado: %.1fs' % (w.t_us / 1e6))
     log = os.path.join(caixa, 'RESULTADOS3', 'TMC_LOG.txt')
     print(open(log, encoding='utf8', errors='replace').read()[-6000:] if os.path.exists(log) else 'SEM LOG')

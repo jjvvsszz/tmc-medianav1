@@ -10,6 +10,7 @@ void mn1_crt_init(HANDLE inst);
 void mn1_float_init(void);
 int mn1_float_autoteste(void);
 int main(int argc, char **argv);
+int setenv(const char *n, const char *v, int o);
 void exit(int);
 
 __attribute__((section(".text.start")))
@@ -32,5 +33,7 @@ void _start(HANDLE inst, HANDLE prev, wchar *cmd, int show)
     mn1_float_init();
     if (!mn1_float_autoteste()) { lg("tmc: ponto flutuante da coredll nao bate, abortando"); lg_commit(); ExitThread(6); }
     lg_commit();
+    /* perfil do proprio port: a cada 120 ticks, tempo de logica e de apresentacao no registro */
+    setenv("TMC_PROFILE", "1", 1);
     exit(main(1, argv));
 }

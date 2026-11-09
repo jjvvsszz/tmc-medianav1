@@ -345,10 +345,13 @@ static char logbuf[1024];
 static int loglen;
 static void log_char(char c)
 {
+    static u32 ultimo;
     if (c == '\n' || loglen >= (int)sizeof logbuf - 1) {
         logbuf[loglen] = 0;
         lg("%s", logbuf);
         loglen = 0;
+        /* grava no pendrive no maximo a cada 0,5 s: se o jogo cair, perde-se pouco */
+        if (GetTickCount() - ultimo >= 500) { lg_commit(); ultimo = GetTickCount(); }
         if (c == '\n') return;
     }
     logbuf[loglen++] = c;

@@ -240,8 +240,14 @@ void Port_DecodeFontGBA(const void* gba_data, Font* out);
  */
 static inline bool Port_IsFontGBAEncoded(const void* data) {
     const u8* raw = (const u8*)data;
+#if __SIZEOF_POINTER__ == 4
+    /* 32 bits: layouts iguais; blob do GBA tem dest no formato do GBA, Font nativa nao */
+    u32 word0 = raw[0] | (raw[1] << 8) | (raw[2] << 16) | ((u32)raw[3] << 24);
+    return (word0 >= 0x02000000u && word0 < 0x08000000u);
+#else
     u32 word1 = raw[4] | (raw[5] << 8) | (raw[6] << 16) | (raw[7] << 24);
     return (word1 >= 0x02000000u && word1 < 0x08000000u);
+#endif
 }
 
 /*

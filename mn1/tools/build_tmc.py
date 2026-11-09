@@ -40,7 +40,7 @@ CF_JOGO = ('-march=mips2 -mtune=mips32 -mabi=32 -EL -msoft-float -mno-abicalls -
 INC_MN1 = '-I"%s" -I"%s" -I%s/port/ppu/include' % (w(os.path.join(PROBE, 'src')), w(os.path.join(PROBE, 'build_gen')), REPO)
 
 MN1_WIN = ['mn1/mn1_crt.c', 'mn1/mn1_float.c', 'mn1/mn1_ppu.c', 'mn1/mn1_entry.c']
-MN1_JOGO = ['mn1/mn1_config.c', 'mn1/mn1_sdl.c', 'mn1/mn1_assets.c']
+MN1_JOGO = ['mn1/mn1_config.c', 'mn1/mn1_sdl.c', 'mn1/mn1_assets.c', 'mn1/mn1_rando.c']
 PROBE_SRC = ['rt.c', 'ui.c']
 
 
