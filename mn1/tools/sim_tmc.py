@@ -251,6 +251,11 @@ class SimTmc(sim.Sim):
             from unicorn import UC_HOOK_BLOCK
             self.rastro = collections.deque(maxlen=60)
             self.uc.hook_add(UC_HOOK_BLOCK, lambda uc, a, sz, ud: self.rastro.append(a))
+        if n == int(os.environ.get('DESPEJAR', '0')):
+            for nome_, tam_ in (('gVram', 0x18000), ('gIoMem', 0x400), ('gBgPltt', 0x200)):
+                end_ = next(a_ for a_, n2 in SIMBOLOS_TODOS if n2 == nome_)
+                open(os.path.join(SAIDA, nome_ + '.bin'), 'wb').write(self.rd(end_, tam_))
+            print('  [sim] despejado no quadro', n, flush=True)
         if n >= QUADROS:
             self.exitcode = 0
             self.uc.emu_stop()
@@ -258,6 +263,12 @@ class SimTmc(sim.Sim):
 
 
 SAIDA = os.path.join(AQUI, 'sim_saida')
+
+
+def todos_simbolos():
+    from elftools.elf.elffile import ELFFile
+    e = ELFFile(open(os.path.join(AQUI, 'mn1', 'gerado', 'tmc.elf'), 'rb'))
+    return [(x['st_value'], x.name) for x in e.get_section_by_name('.symtab').iter_symbols() if x.name]
 
 
 def vigia_simbolos():
@@ -275,6 +286,7 @@ if __name__ == '__main__':
     shutil.rmtree(caixa, ignore_errors=True)
     os.makedirs(os.path.join(caixa, 'MN1'))
     shutil.copy(ROM, os.path.join(caixa, 'MN1', 'baserom.gba'))
+    SIMBOLOS_TODOS = todos_simbolos()
     w = sim.World(caixa)
     s = SimTmc(w, os.path.join(AQUI, 'dist', 'tmc.exe'), '')
     import threading

@@ -40,7 +40,7 @@ extern u8* gMapData;
  */
 static inline int Port_IsValidHostPtr(const void* p) {
     uintptr_t a = (uintptr_t)p;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(TMC_MN1)
     return a >= 0x10000ULL && a < 0x800000000000ULL;
 #else
     return a > 0xFFFFFFFFULL && a < 0x1000000000000ULL;

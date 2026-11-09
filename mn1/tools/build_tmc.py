@@ -35,6 +35,7 @@ INC_JOGO = ('-isystem %s/usr/mipsel-linux-gnu/include -I%s -I%s/include -I%s/por
 DEF_JOGO = '-DPC_PORT -DNON_MATCHING -DUSE_HDMA -DUSA -DENGLISH -DREVISION=0 -DMODE1_GBA_WIDTH=240 -include region.h -DTMC_MN1'
 CF_JOGO = ('-march=mips2 -mtune=mips32 -mabi=32 -EL -msoft-float -mno-abicalls -fno-pic -G0 -mno-gpopt -mno-llsc '
            '-mno-branch-likely -O2 -std=gnu11 -fno-stack-protector -fno-asynchronous-unwind-tables -fno-common '
+           '-fno-strict-aliasing -fwrapv -fno-strict-overflow -funsigned-char '
            '-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -w')
 # camada Win32 da MN1: mesmas flags do MN1_Probe (wchar de 16 bits, sem libc do Linux)
 INC_MN1 = '-I"%s" -I"%s" -I%s/port/ppu/include' % (w(os.path.join(PROBE, 'src')), w(os.path.join(PROBE, 'build_gen')), REPO)

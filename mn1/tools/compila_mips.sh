@@ -14,7 +14,7 @@ INC="-isystem $TC/usr/mipsel-linux-gnu/include -I$BASE/mn1 -I$REPO/include -I$RE
  -I$REPO/port/ppu/include -I$REPO/libs/VirtuaAPU/include -I$REPO/libs/agbplay_core -I$REPO/tools/src/assets_extractor"
 DEF="-DTMC_PC_VERSION=\"0.9.6-mn1\" -DTMC_PORT_VERSION=\"0.9.6-mn1\" -DPC_PORT -DNON_MATCHING -DUSE_HDMA -DUSA -DENGLISH -DREVISION=0 -DMODE1_GBA_WIDTH=240 -include region.h -DTMC_MN1"
 CF="-march=mips2 -mtune=mips32 -mabi=32 -EL -msoft-float -mno-abicalls -fno-pic -G0 -mno-gpopt -mno-llsc \
- -mno-branch-likely -O2 -std=gnu11 -fno-stack-protector -fno-asynchronous-unwind-tables -fno-common -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -w"
+ -mno-branch-likely -O2 -std=gnu11 -fno-stack-protector -fno-asynchronous-unwind-tables -fno-common -fno-strict-aliasing -fwrapv -fno-strict-overflow -funsigned-char -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -w"
 rm -rf "$OUT"; mkdir -p "$OUT/obj" "$OUT/err"
 cd "$REPO"
 compile() {

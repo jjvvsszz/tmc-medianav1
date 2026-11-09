@@ -1099,7 +1099,7 @@ void* Port_ResolveEwramPtr(u32 gba_addr) {
              * PC  layout:  bgSettings(8)  mapData(0x2000)  collisionData(0x1000) ...
              * All fields after bgSettings are shifted by +4 on PC.
              */
-            u32 pc_off = (gba_off < 4) ? gba_off : gba_off + 4;
+            u32 pc_off = (gba_off < 4) ? gba_off : gba_off + (u32)(sizeof(void*) - 4);
             return (u8*)&gMapBottom + pc_off;
         }
     }
@@ -1109,7 +1109,7 @@ void* Port_ResolveEwramPtr(u32 gba_addr) {
         const u32 GBA_SIZE = 0xC010u;
         if (gba_addr >= GBA_BASE && gba_addr < GBA_BASE + GBA_SIZE) {
             u32 gba_off = gba_addr - GBA_BASE;
-            u32 pc_off = (gba_off < 4) ? gba_off : gba_off + 4;
+            u32 pc_off = (gba_off < 4) ? gba_off : gba_off + (u32)(sizeof(void*) - 4);
             return (u8*)&gMapTop + pc_off;
         }
     }

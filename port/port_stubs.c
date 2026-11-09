@@ -44,7 +44,7 @@ u32 GetNextScriptCommandHalfword(u16* ptr) {
             /* Not in ROM — check if it's a plausible native pointer.
              * On 64-bit Windows, user-mode addresses have upper 16+ bits zero.
              * If upper 32 bits are non-zero and it's not a valid heap/stack range, reject it. */
-            if ((addr >> 48) != 0) {
+            if (((unsigned long long)addr >> 48) != 0) {
                 fprintf(stderr,
                         "[SCRIPT] FATAL: GetNextScriptCommandHalfword corrupted ptr=%p entity context corrupted\n",
                         (void*)ptr);

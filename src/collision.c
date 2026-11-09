@@ -201,7 +201,7 @@ bool32 IsColliding(Entity* this, Entity* that) {
         {
             uintptr_t pa = (uintptr_t)bb_this;
             uintptr_t pb = (uintptr_t)bb_that;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(TMC_MN1)
             /* Windows / Wine: user-mode pointers are in the low ~128 TB
              * (heap typically 0x000001XX_XXXXXXXX, exe/DLL 0x00007FFE_...).
              * The Linux check below would reject *every* valid Windows
