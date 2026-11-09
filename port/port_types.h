@@ -45,7 +45,7 @@ PORT_STATIC_ASSERT(sizeof(s64) == 8, "s64 must be 8 bytes");
 // Pointer assertions — the PC port targets 64-bit systems only. The N64
 // target is the lone 32-bit-pointer consumer of this header.
 #ifndef TMC_N64
-PORT_STATIC_ASSERT(sizeof(void*) == 8, "PC port targets 64-bit systems only");
+/* MN1: 32 bits */
 #endif
 
 #endif // PORT_TYPES_H

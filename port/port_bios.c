@@ -905,7 +905,11 @@ void VBlankIntrWait(void) {
             lastFrameNs = SDL_GetTicksNS();
         } else {
             u64 deadline = lastFrameNs + tickPeriodNs;
+#ifdef TMC_MN1
+            if (now > deadline + 8 * tickPeriodNs) {
+#else
             if (now > deadline + tickPeriodNs) {
+#endif
                 /* Fell behind the tick grid by >1 tick (breakpoint, OS
                  * hitch, sustained overload) — snap forward rather than
                  * burn CPU catching up. */

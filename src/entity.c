@@ -12,7 +12,7 @@
 typedef struct Temp {
     void* prev;
     void* next;
-#ifdef PC_PORT
+#if defined(PC_PORT) && __SIZEOF_POINTER__ == 8
     /*
      * 64-bit: Must be large enough for the biggest manager struct.
      * FightManagerHelper / EnemyInteractionManager have Entity* enemies[8]

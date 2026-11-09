@@ -341,7 +341,7 @@ void virtuappu_mode1_get_bound_gba_memory(VirtuaPPUMode1GbaMemory* memory) {
  * threads while still seeing the correct HDMA-mutated register state
  * (BG SCROLL, BLDY, etc.) for that scanline. NULL on the main / setup
  * thread keeps the existing single-threaded behavior intact. */
-#ifdef TMC_N64
+#if defined(TMC_N64) || defined(TMC_MN1)
 /* N64: single-threaded (no OpenMP) and bare-metal (no TLS). __thread compiles to
  * RDHWR $29, which the VR4300 (MIPS III) doesn't implement -> Reserved Instruction.
  * Single-threaded rendering makes plain file-scope storage correct here. */

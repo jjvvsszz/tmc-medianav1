@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 enum {
-#ifdef TMC_N64
+#if defined(TMC_N64) || defined(TMC_MN1)
     /* N64: only the native 240x160 frame is needed; mode1 binds the engine's
      * gVram, so the 4 MB scratch vram shrinks to the GBA size. Keeps RDRAM use low. */
     VIRTUAPPU_MAX_FRAME_WIDTH = 240,
